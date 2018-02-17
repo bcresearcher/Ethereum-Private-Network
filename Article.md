@@ -44,7 +44,7 @@ docker build -t node_two .
 OK, containers are built:
 
 ```bash
-docker run --rm -it -p 8545:8545 --net=ETH node_one
+docker run --name node_one --rm -it -p 8545:8545 --net=ETH node_one
 eth_user@node_one:~$ ls -a
 .  ..  .bash_logout  .bashrc  .ethereum  .profile  eth_common
 eth_user@node_one:~$
@@ -53,7 +53,7 @@ eth_user@node_one:~$
 First one are ready(*don’t close terminal*), now second one, open an another terminal and run:
 
 ```bash
-docker run --rm -it -p 8546:8546 --net=ETH node_two
+docker run --name node_two --rm -it -p 8546:8546 --net=ETH node_two
 eth_user@node_two:~$ ls -a
 .  ..  .bash_logout  .bashrc  .ethereum  .profile  eth_common
 eth_user@node_two:~$
