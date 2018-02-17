@@ -14,36 +14,13 @@ We’ll set up a network and create two simple JSON-RPC clients in order to comm
 
 To get the difference between Public and Private networks [read this article by V. Buterin the author of Ethereum](https://blog.ethereum.org/2015/08/07/on-public-and-private-blockchains/).
 
-I assume you have got hand-on experience with Docker, also you’re knowing Ruby or Nodejs a little. 
+I assume you have got hand-on experience with Docker, also you’re knowing Nodejs a little. 
 
 > You can ask why docker? I don't want to install `geth` locally.
 
-Copy the source code from my [Github repository.](https://github.com/fishbullet/Ethereum-Private-Network)
+Copy the source code from my [Github repository.](https://github.com/bcresearcher/Ethereum-Private-Network/blob/master/Article.md)
 
-Let’s get started from the Docker container, here is the Dockerfile for our ethereum nodes, we’ll use the geth (go-ethereum):
-
-```Dockerfile
-FROM ubuntu:16.04
-
-LABEL version="1.0"
-LABEL maintainer="shindu666@gmail.com"
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install --yes software-properties-common
-RUN add-apt-repository ppa:ethereum/ethereum
-RUN apt-get update && apt-get install --yes geth
-
-RUN adduser --disabled-login --gecos "" eth_user
-
-COPY eth_common /home/eth_user/eth_common
-RUN chown -R eth_user:eth_user /home/eth_user/eth_common
-USER eth_user
-WORKDIR /home/eth_user
-
-RUN geth init eth_common/genesis.json
-
-ENTRYPOINT bash
-```
+Let’s get started by building the docker. Refer to [Dockerfile](https://github.com/bcresearcher/Ethereum-Private-Network/blob/master/Dockerfile), we’ll use the geth (go-ethereum).
 
 In order to create *private* network we need the [genesis file](https://github.com/ethereum/go-ethereum/wiki/Private-network#creating-the-genesis-block) which must be on both nodes(look in the `eth_common/`).
 
@@ -64,7 +41,7 @@ docker build -t node_two .
 # ....
 ```
 
-OK, containers are builded:
+OK, containers are built:
 
 ```bash
 docker run --rm -it -p 8545:8545 --net=ETH node_one
@@ -237,7 +214,7 @@ node_one:
 node_two:
 ```
 # enode from node_one with IP address of node_one container
-enode = "enode://2468b878bb87****072fae1362fd3448@172.18.0.2:30303
+enode = "enode://2468b878bb87****072fae1362fd3448@172.18.0.2:30303"
 > admin.addPeer(enode)
 > admin.peers
 [{
@@ -277,38 +254,6 @@ node_two:
 ```
 *Don’t close docker containers* it’s time to create a script to run commands in our nodes by `JSON-RPC`.
 
-Here is an example of Ruby script:
-
-```ruby
-#!/usr/bin/env ruby
-require "bundler/setup"
-require 'json-rpc-client'
-EM.run {
-  EventMachine.add_periodic_timer(5) { # 5 seconds timeout
-    node_one = JsonRpcClient.new('http://localhost:8545/') 
-    node_two = JsonRpcClient.new('http://localhost:8546/')
-    [
-      { name: "NODE_ONE", node: node_one },
-      { name: "NODE_TWO", node: node_two } 
-    ].each do |node|
-      rpc_coinbase = node[:node].eth_coinbase
-      rpc_blockNumber = node[:node].eth_blockNumber
-      rpc_coinbase.callback do |result|
-        puts "#{node[:name]} coinbase: #{result}"
-      end
-      rpc_coinbase.errback do |error|
-        puts error
-      end
-      rpc_blockNumber.callback do |result|
-        puts "#{node[:name]} blocknumber: #{Integer(result)}"
-      end
-      rpc_blockNumber.errback do |error|
-        puts error
-      end
-    end
-  }
-}
-```
 And a Nodejs example:
 ```js
 var rpc = require('node-json-rpc');
@@ -367,14 +312,7 @@ NODE ONE block number: 1467
 NODE TWO coinbase: 0x648a4b24cf769da5467bf9b008dace89d9f65a80
 NODE TWO block number: 1467
 ```
-```bash
-$> ruby client.rb 
-NODE_ONE blocknumber: 1533
-NODE_TWO coinbase: 0x648a4b24cf769da5467bf9b008dace89d9f65a80
-NODE_TWO blocknumber: 1533
-NODE_ONE coinbase: 0x718cb4a34cac0fa4e9a37f249340078896b4dfa0
-```
-We have builded private ethereum network cluster with the script writen on Ruby and Nodejs, these scripts able to communicate with our cluster using JSON-RPC protocol.
+We have built private ethereum network cluster with the script writen on Nodejs, these scripts able to communicate with our cluster using JSON-RPC protocol.
 It’s a good start to create your blockchain project based on Ethereum. 
 
 References:
@@ -384,7 +322,7 @@ References:
 - https://github.com/ethereum/go-ethereum/wiki
 
 ### Disclaimer
-> :exclamation: you use the howto at your own risk.. 
+> :exclamation: you use it at your own risk.. 
 
-<sub>P.S. forgive me my bad English, it’s not my native language.</sub>
+<sub>P.S. forgive me for my bad English, it’s not my native language.</sub>
 

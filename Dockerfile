@@ -1,18 +1,16 @@
-FROM ubuntu:16.04
+FROM alpine:latest
 
-LABEL version="1.0"
-LABEL maintainer="shindu666@gmail.com"
+LABEL version="0.1"
+LABEL maintainer="civilbots@gmail.com"
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apk add --no-cache go make gcc musl-dev linux-headers bash git ca-certificates
+RUN git clone --depth 1 https://github.com/ethereum/go-ethereum
+RUN cd go-ethereum && make geth
+RUN cp /go-ethereum/build/bin/geth /usr/local/bin/
 
-RUN apt-get update && apt-get install --yes software-properties-common
-RUN add-apt-repository ppa:ethereum/ethereum
-RUN apt-get update && apt-get install --yes geth
-
-RUN adduser --disabled-login --gecos "" eth_user
+RUN adduser -S eth_user
 
 COPY eth_common /home/eth_user/eth_common
-RUN chown -R eth_user:eth_user /home/eth_user/eth_common
 
 USER eth_user
 
@@ -20,5 +18,6 @@ WORKDIR /home/eth_user
 
 RUN geth init eth_common/genesis.json
 
-ENTRYPOINT bash
+EXPOSE 8545 8546 30303 30303/udp 30304/udp
 
+ENTRYPOINT bash
